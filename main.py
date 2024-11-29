@@ -77,21 +77,19 @@ def almacenar_respuestas(frase):
 
 def almacenar_respuestas_csv(respuestas, archivo_csv):
     try:
-        # Leer las respuestas existentes en el archivo CSV
         df_existente = pd.read_csv(archivo_csv)
     except FileNotFoundError:
-        # Si el archivo no existe, crear un DataFrame vacío
         df_existente = pd.DataFrame()
 
-    # Crear un DataFrame con las nuevas respuestas
     df_nuevas = pd.DataFrame([respuestas])
-
-    # Concatenar las respuestas nuevas con las existentes
     df_combinado = pd.concat([df_existente, df_nuevas], ignore_index=True)
-
-    # Guardar el DataFrame combinado en el archivo CSV
     df_combinado.to_csv(archivo_csv, index=False)
 
+def generar_Recomendaciones(vectorRespuestas):
+    recomendar = "Hola,"+vectorRespuestas[1]+ " Aqui tienes las recomendaciones: \n"
+    recomendar = recomendar + "la clasificación de eficiencia energética para los electrodomésticos! Esta clasificación se utiliza para medir y comunicar cuán eficientes son los electrodomésticos en términos de consumo de energía. La clasificación se presenta generalmente en una etiqueta que se pega al electrodoméstico y varía según la región, pero una de las más conocidas es la clasificación de la Unión Europea, que va desde la letra A+++ (más eficiente) hasta la G (menos eficiente)."
+    recomendar = recomendar + "Gracias por completar la encuesta. No te vayas, podemos seguir halando"
+    return recomendar
 numeroPreguntas = 9
 # Chatbot
 def chatbot(frase_usuario,contadorPreguntas):
@@ -110,7 +108,7 @@ def chatbot(frase_usuario,contadorPreguntas):
             return random.choice(categorias[proxima_pregunta]["respuestas"])
         else:
             almacenar_respuestas_csv(vectorRespuestas, archivo_csv)
-            return "Gracias por completar la encuesta."
+            return generar_Recomendaciones(vectorRespuestas)
         
     if categoria == "desconocido":
         return "Lo siento, no entendí tu pregunta. Por favor, sea más específico."
