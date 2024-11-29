@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.requests import Request
 import random
 import pandas as pd
 
 app = FastAPI()
+# Servir archivos estáticos
+app.mount("/static", StaticFiles(directory="static"), name="static")
 vectorRespuestas = []
 respuestasEncuesta = {}
 contadorPreguntas = 1
@@ -70,10 +75,27 @@ def clasificar_categoria(frase):
 def almacenar_respuestas(frase):
     vectorRespuestas.append(frase)
 
+def almacenar_respuestas_csv(respuestas, archivo_csv):
+    try:
+        # Leer las respuestas existentes en el archivo CSV
+        df_existente = pd.read_csv(archivo_csv)
+    except FileNotFoundError:
+        # Si el archivo no existe, crear un DataFrame vacío
+        df_existente = pd.DataFrame()
+
+    # Crear un DataFrame con las nuevas respuestas
+    df_nuevas = pd.DataFrame([respuestas])
+
+    # Concatenar las respuestas nuevas con las existentes
+    df_combinado = pd.concat([df_existente, df_nuevas], ignore_index=True)
+
+    # Guardar el DataFrame combinado en el archivo CSV
+    df_combinado.to_csv(archivo_csv, index=False)
 
 numeroPreguntas = 9
 # Chatbot
 def chatbot(frase_usuario,contadorPreguntas):
+    archivo_csv = "respuestas_encuesta.csv"
     if (contadorPreguntas > numeroPreguntas):
      categoria = clasificar_categoria(frase_usuario)
     else:
@@ -87,6 +109,7 @@ def chatbot(frase_usuario,contadorPreguntas):
         if proxima_pregunta in categorias:
             return random.choice(categorias[proxima_pregunta]["respuestas"])
         else:
+            almacenar_respuestas_csv(vectorRespuestas, archivo_csv)
             return "Gracias por completar la encuesta."
         
     if categoria == "desconocido":
@@ -97,23 +120,34 @@ def chatbot(frase_usuario,contadorPreguntas):
 # Modelo para entrada de datos
 class FraseEntrada(BaseModel):
     frase: str
-
-if __name__ == "__main__":
-    print("Chatbot iniciado. Escriba 'salir' para terminar la conversación.")
-    while True:
-        usuario_input = input("Tú: ")
-        
-        if usuario_input.lower() == "salir":
-            print("Chatbot: ¡Hasta luego!")
-            df = pd.DataFrame([vectorRespuestas])
-            df.to_csv("respuestas_encuesta.csv", index=False)
-            break
-        respuesta = chatbot(usuario_input,contadorPreguntas)
-        print(f"Chatbot: {respuesta}")
-        contadorPreguntas += 1
+# USO DE CHATBOOT EN CONSOLA
+#if __name__ == "__main__":
+#    print("Chatbot iniciado. Escriba 'salir' para terminar la conversación.")
+#    while True:
+#        usuario_input = input("Tú: ")
+#        
+#        if usuario_input.lower() == "salir":
+#            print("Chatbot: ¡Hasta luego!")
+##            df = pd.DataFrame([vectorRespuestas])
+#            df.to_csv("respuestas_encuesta.csv", index=False)
+#            break
+#        respuesta = chatbot(usuario_input,contadorPreguntas)
+#        print(f"Chatbot: {respuesta}")
+#        contadorPreguntas += 1
 
 # Endpoint del chatbot
 #@app.post("/chatbot/")
 #def obtener_respuesta(entrada: FraseEntrada):
 #    respuesta = chatbot(entrada.frase)
 #    return {"respuesta": respuesta}
+@app.get("/", response_class=HTMLResponse)
+async def get(request: Request):
+    with open("static/index.html") as f:
+        return HTMLResponse(f.read())
+
+@app.post("/chatbot/")
+async def obtener_respuesta(entrada: FraseEntrada, request: Request): 
+    global contadorPreguntas
+    respuesta = chatbot(entrada.frase, contadorPreguntas)
+    contadorPreguntas += 1
+    return {"respuesta": respuesta}

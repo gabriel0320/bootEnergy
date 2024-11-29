@@ -1,0 +1,98 @@
+body {
+
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+    margin: 0;
+    background-image: url('/static/fondowebsite.png');
+    background-size: cover;
+    background-position: center; 
+}
+
+.chat-container {
+    width: 400px;
+    max-width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.logo-container {
+    display: flex; 
+    justify-content: center;
+    padding: 20px; 
+} 
+
+.logo-container img {
+    max-width: 100px;
+    height: auto;
+}
+
+.chat-box {
+    height: 500px;
+    overflow-y: scroll;
+    padding: 20px;
+    background: #fafafa;
+}
+
+.message {
+    margin: 10px 0;
+    padding: 10px 15px;
+    border-radius: 20px;
+    max-width: 80%;
+}
+
+.message.user {
+    background-color: #dcf8c6;
+    align-self: flex-end;
+    text-align: right;
+}
+
+.message.bot {
+    background-color: #f1f0f0;
+    align-self: flex-start;
+    text-align: left;
+}
+
+.input-box {
+    display: flex;
+    padding: 20px;
+    border-top: 1px solid #ddd;
+}
+
+input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    margin-right: 10px;
+    outline: none;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.footer-container {
+     display: flex; 
+     justify-content: center; 
+     padding: 10px; 
+     background: rgba(255, 255, 255, 0.8); 
+}
+
+.footer-container img { 
+    max-width: 100%;
+}   
