@@ -87,7 +87,7 @@ def almacenar_respuestas_csv(respuestas, archivo_csv):
 
 def generar_Recomendaciones(vectorRespuestas):
     recomendar = "Hola,"+vectorRespuestas[1]+ " Aqui tienes las recomendaciones: \n"
-    recomendar = recomendar + "la clasificación de eficiencia energética para los electrodomésticos! Esta clasificación se utiliza para medir y comunicar cuán eficientes son los electrodomésticos en términos de consumo de energía. La clasificación se presenta generalmente en una etiqueta que se pega al electrodoméstico y varía según la región, pero una de las más conocidas es la clasificación de la Unión Europea, que va desde la letra A+++ (más eficiente) hasta la G (menos eficiente)."
+    recomendar = recomendar + "la clasificación de eficiencia energética para los electrodomésticos! Esta clasificación se utiliza para medir y comunicar cuán eficientes son los electrodomésticos en términos de consumo de energía. La clasificación se presenta generalmente en una etiqueta que se pega al electrodoméstico y varía según la región, pero una de las más conocidas es la clasificación de la Unión Europea, que va desde la letra A+++ (más eficiente) hasta la G (menos eficiente).\n"
     recomendar = recomendar + "Gracias por completar la encuesta. No te vayas, podemos seguir halando"
     return recomendar
 numeroPreguntas = 9
