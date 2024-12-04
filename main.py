@@ -12,6 +12,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 vectorRespuestas = []
 respuestasEncuesta = {}
 contadorPreguntas = 1
+numeroPreguntas = 11
 # Diccionario de categorías con palabras clave y respuestas
 categorias = {
     "saludo": {
@@ -50,7 +51,7 @@ categorias = {
     
     "pregunta6": {
         "palabras_claves": ["Franja"],
-        "respuestas": ["¿En qué franja horaria sueles consumir más electricidad? (mañana, tarde, noche)"]
+        "respuestas": ["¿En qué franja horaria sueles consumir más electricidad? Responda el numero: 1 (Mañana), 2 (Tarde), 3 (Noche)"]
     },
     
     "pregunta7": {
@@ -61,8 +62,84 @@ categorias = {
     "pregunta8": {
         "palabras_claves": ["cocimientoClasificacion"],
         "respuestas": ["¿Conoces la clasificación de eficiencia energética para los electrodomésticos?"]
+    },
+    
+    "pregunta9": {
+        "palabras_claves": ["personasEnCasa"],
+        "respuestas": ["¿cuantas personas viven en casa?"]
+    },
+    
+    "pregunta10": {
+        "palabras_claves": ["teletrabajo"],
+        "respuestas": ["¿haces teletrabajo?"]
     }
 }
+def clasificar_consumo_energia(bombillos, ahorradores, dispositivos_alto_consumo, franja_horaria, apaga_dispositivos, conoce_clasificacion, personas, teletrabajo):
+    # Puntuaciones iniciales
+    puntuacion = 0
+
+    # Bombillos
+    if int(bombillos) > 10:
+        puntuacion += 3
+    elif 5 <= bombillos <= 10:
+        puntuacion += 2
+    else:
+        puntuacion += 1
+    
+    # Bombillos ahorradores
+    if ahorradores.lower() == 'si':
+        puntuacion -= 2
+    else:
+        puntuacion += 2
+    
+    # Dispositivos de alto consumo
+    puntuacion += int(dispositivos_alto_consumo) * 3
+
+    # Franja horaria
+    if int(franja_horaria) == 3:
+        puntuacion += 3
+    elif int(franja_horaria) == 2:
+        puntuacion += 2
+    else:
+        puntuacion += 1
+    
+    # Apagar dispositivos completamente
+    if apaga_dispositivos.lower() == 'si':
+        puntuacion -= 2
+    else:
+        puntuacion += 2
+    
+    # Conocimiento de clasificación de eficiencia energética
+    if conoce_clasificacion.lower() == 'si':
+        puntuacion -= 1
+    else:
+        puntuacion += 1
+    
+    # Número de personas en casa
+    if int(personas) > 4:
+        puntuacion += 3
+    elif 2 <= int(personas) <= 4:
+        puntuacion += 2
+    else:
+        puntuacion += 1
+    
+    # Teletrabajo
+    if teletrabajo.lower() == 'si':
+        puntuacion += 3
+    else:
+        puntuacion += 1
+    
+    # Clasificación final
+    if puntuacion >= 15:
+        return "Alto"
+    elif 8 <= puntuacion < 15:
+        return "Normal"
+    else:
+        return "Bajo"
+
+# Ejemplo de uso
+# perfil_consumo = clasificar_consumo_energia(8, 'si', 2, 3, 'no', 'si', 4, 'si')
+# print(f"El perfil de consumo de energía es: {perfil_consumo}")
 
 # Clasificador de categorías
 def clasificar_categoria(frase):
@@ -86,11 +163,15 @@ def almacenar_respuestas_csv(respuestas, archivo_csv):
     df_combinado.to_csv(archivo_csv, index=False)
 
 def generar_Recomendaciones(vectorRespuestas):
+    clasificacion =clasificar_consumo_energia(vectorRespuestas[3], vectorRespuestas[4], vectorRespuestas[5],
+                                vectorRespuestas[6], vectorRespuestas[7], vectorRespuestas[8], 
+                                vectorRespuestas[9], vectorRespuestas[10])
     recomendar = "Hola,"+vectorRespuestas[1]+ " Aqui tienes las recomendaciones: \n"
+    recomendar = recomendar + "El perfil de consumo de energía es: " + clasificacion + "\n"
     recomendar = recomendar + "la clasificación de eficiencia energética para los electrodomésticos! Esta clasificación se utiliza para medir y comunicar cuán eficientes son los electrodomésticos en términos de consumo de energía. La clasificación se presenta generalmente en una etiqueta que se pega al electrodoméstico y varía según la región, pero una de las más conocidas es la clasificación de la Unión Europea, que va desde la letra A+++ (más eficiente) hasta la G (menos eficiente).\n"
     recomendar = recomendar + "Gracias por completar la encuesta. No te vayas, podemos seguir halando"
     return recomendar
-numeroPreguntas = 9
+
 # Chatbot
 def chatbot(frase_usuario,contadorPreguntas):
     archivo_csv = "respuestas_encuesta.csv"
@@ -119,33 +200,17 @@ def chatbot(frase_usuario,contadorPreguntas):
 class FraseEntrada(BaseModel):
     frase: str
 # USO DE CHATBOOT EN CONSOLA
-#if __name__ == "__main__":
-#    print("Chatbot iniciado. Escriba 'salir' para terminar la conversación.")
-#    while True:
-#        usuario_input = input("Tú: ")
-#        
-#        if usuario_input.lower() == "salir":
-#            print("Chatbot: ¡Hasta luego!")
-##            df = pd.DataFrame([vectorRespuestas])
-#            df.to_csv("respuestas_encuesta.csv", index=False)
-#            break
-#        respuesta = chatbot(usuario_input,contadorPreguntas)
-#        print(f"Chatbot: {respuesta}")
-#        contadorPreguntas += 1
+if __name__ == "__main__":
+    print("Chatbot iniciado. Escriba 'salir' para terminar la conversación.")
+    while True:
+        usuario_input = input("Tú: ")
+        
+        if usuario_input.lower() == "salir":
+            print("Chatbot: ¡Hasta luego!")
+            df = pd.DataFrame([vectorRespuestas])
+            df.to_csv("respuestas_encuesta.csv", index=False)
+            break
+        respuesta = chatbot(usuario_input,contadorPreguntas)
+        print(f"Chatbot: {respuesta}")
+        contadorPreguntas += 1
 
-# Endpoint del chatbot
-#@app.post("/chatbot/")
-#def obtener_respuesta(entrada: FraseEntrada):
-#    respuesta = chatbot(entrada.frase)
-#    return {"respuesta": respuesta}
-@app.get("/", response_class=HTMLResponse)
-async def get(request: Request):
-    with open("static/index.html") as f:
-        return HTMLResponse(f.read())
-
-@app.post("/chatbot/")
-async def obtener_respuesta(entrada: FraseEntrada, request: Request): 
-    global contadorPreguntas
-    respuesta = chatbot(entrada.frase, contadorPreguntas)
-    contadorPreguntas += 1
-    return {"respuesta": respuesta}
