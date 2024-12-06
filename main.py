@@ -46,7 +46,7 @@ categorias = {
     
     "pregunta5": {
         "palabras_claves": ["dispositivosAltoConsumo"],
-        "respuestas": ["¿Cuántos dispositivos electrónicos o electrodomésticos de alto consumo (aire acondicionado, calefacción, horno eléctrico) usa con regularidad?"]
+        "respuestas": ["¿Cuántos dispositivos electrónicos o electrodomésticos de alto consumo (aire acondicionado, calefacción, horno eléctrico)?"]
     },
     
     "pregunta6": {
@@ -74,6 +74,44 @@ categorias = {
         "respuestas": ["¿haces teletrabajo?"]
     }
 }
+
+def sugerencias_consumo(clasificacion):
+    sugerencias_alto = [
+        "Cambiar a bombillas LED: Sustituye las bombillas incandescentes por bombillas LED, que son más eficientes y tienen una vida útil más larga.",
+        "Desconectar dispositivos electrónicos: Apaga completamente los dispositivos electrónicos en lugar de dejarlos en modo de espera.",
+        "Usar electrodomésticos eficientes: Invierte en electrodomésticos con alta clasificación de eficiencia energética.",
+        "Optimizar el uso del aire acondicionado y calefacción: Ajusta la temperatura a un nivel razonable y utiliza temporizadores para reducir el tiempo de funcionamiento.",
+        "Instalar termostatos programables: Permiten controlar mejor la temperatura de tu hogar y optimizar el uso de energía.",
+        "Revisar el aislamiento de tu hogar: Asegúrate de que las ventanas y puertas estén bien selladas para evitar pérdidas de calor o frío.",
+        "Incorporar energías renovables: Si es posible, instala paneles solares para reducir la dependencia de la red eléctrica."
+    ]
+
+    sugerencias_normal = [
+        "Mantener buenos hábitos: Continúa apagando los dispositivos cuando no los uses y usa bombillas ahorradoras.",
+        "Monitorear el uso de energía: Utiliza medidores inteligentes para hacer un seguimiento de tu consumo y detectar áreas de mejora.",
+        "Usar temporizadores y enchufes inteligentes: Programar el encendido y apagado de dispositivos electrónicos para optimizar su uso.",
+        "Mantener y limpiar electrodomésticos: Mantén los electrodomésticos limpios y bien mantenidos para asegurar que funcionen de manera eficiente.",
+        "Optimizar la iluminación natural: Aprovecha la luz natural durante el día para reducir la necesidad de iluminación artificial."
+    ]
+
+    sugerencias_bajo = [
+        "Seguir utilizando prácticas eficientes: Continúa utilizando bombillas ahorradoras y electrodomésticos eficientes.",
+        "Promover la eficiencia energética: Comparte tus prácticas de ahorro de energía con amigos y familiares para que también puedan beneficiarse.",
+        "Evaluar el uso de energía renovable: Si aún no lo has hecho, considera la posibilidad de instalar fuentes de energía renovable como paneles solares.",
+        "Revisar y ajustar el consumo: Aunque tu consumo ya es bajo, periódicamente revisa tus hábitos y ajusta donde sea necesario para mantener la eficiencia.",
+        "Mantener el uso responsable: Asegúrate de seguir apagando completamente los dispositivos electrónicos y utilizar solo lo que realmente necesitas."
+    ]
+
+    if clasificacion == "Alto":
+        return sugerencias_alto
+    elif clasificacion == "Normal":
+        return sugerencias_normal
+    elif clasificacion == "Bajo":
+        return sugerencias_bajo
+    else:
+        return ["Clasificación no válida. Por favor, proporcione una clasificación válida: Alto, Normal o Bajo."]
+
+
 def clasificar_consumo_energia(bombillos, ahorradores, dispositivos_alto_consumo, franja_horaria, apaga_dispositivos, conoce_clasificacion, personas, teletrabajo):
     # Puntuaciones iniciales
     puntuacion = 0
@@ -81,7 +119,7 @@ def clasificar_consumo_energia(bombillos, ahorradores, dispositivos_alto_consumo
     # Bombillos
     if int(bombillos) > 10:
         puntuacion += 3
-    elif 5 <= bombillos <= 10:
+    elif 5 <= int(bombillos) <= 10:
         puntuacion += 2
     else:
         puntuacion += 1
@@ -168,7 +206,11 @@ def generar_Recomendaciones(vectorRespuestas):
                                 vectorRespuestas[9], vectorRespuestas[10])
     recomendar = "Hola,"+vectorRespuestas[1]+ " Aqui tienes las recomendaciones: \n"
     recomendar = recomendar + "El perfil de consumo de energía es: " + clasificacion + "\n"
-    recomendar = recomendar + "la clasificación de eficiencia energética para los electrodomésticos! Esta clasificación se utiliza para medir y comunicar cuán eficientes son los electrodomésticos en términos de consumo de energía. La clasificación se presenta generalmente en una etiqueta que se pega al electrodoméstico y varía según la región, pero una de las más conocidas es la clasificación de la Unión Europea, que va desde la letra A+++ (más eficiente) hasta la G (menos eficiente).\n"
+    recomendar = recomendar + "Aqui tienes algunas sugerencias: \n"
+    recomendar = recomendar+', '.join(sugerencias_consumo(clasificacion)) 
+    if(vectorRespuestas[8].lower() == "no"):
+        recomendar = recomendar + "la clasificación de eficiencia energética para los electrodomésticos! Esta clasificación se utiliza para medir y comunicar cuán eficientes son los electrodomésticos en términos de consumo de energía. La clasificación se presenta generalmente en una etiqueta que se pega al electrodoméstico y varía según la región, pero una de las más conocidas es la clasificación de la Unión Europea, que va desde la letra A+++ (más eficiente) hasta la G (menos eficiente).\n"
+    
     recomendar = recomendar + "Gracias por completar la encuesta. No te vayas, podemos seguir halando"
     return recomendar
 
@@ -195,22 +237,36 @@ def chatbot(frase_usuario,contadorPreguntas):
         return "Lo siento, no entendí tu pregunta. Por favor, sea más específico."
     
     return random.choice(categorias[categoria]["respuestas"])
-
+    
 # Modelo para entrada de datos
 class FraseEntrada(BaseModel):
     frase: str
+# Endpoint del chatbot
+@app.get("/", response_class=HTMLResponse)
+async def get(request: Request):
+    with open("static/index.html") as f:
+        return HTMLResponse(f.read())
+
+@app.post("/chatbot/")
+async def obtener_respuesta(entrada: FraseEntrada, request: Request): 
+    global contadorPreguntas
+    respuesta = chatbot(entrada.frase, contadorPreguntas)
+    contadorPreguntas += 1
+    return {"respuesta": respuesta}
+
+
 # USO DE CHATBOOT EN CONSOLA
-if __name__ == "__main__":
-    print("Chatbot iniciado. Escriba 'salir' para terminar la conversación.")
-    while True:
-        usuario_input = input("Tú: ")
-        
-        if usuario_input.lower() == "salir":
-            print("Chatbot: ¡Hasta luego!")
-            df = pd.DataFrame([vectorRespuestas])
-            df.to_csv("respuestas_encuesta.csv", index=False)
-            break
-        respuesta = chatbot(usuario_input,contadorPreguntas)
-        print(f"Chatbot: {respuesta}")
-        contadorPreguntas += 1
+# if __name__ == "__main__":
+#    print("Chatbot iniciado. Escriba 'salir' para terminar la conversación.")
+#    while True:
+#        usuario_input = input("Tú: ")
+#        
+#        if usuario_input.lower() == "salir":
+#            print("Chatbot: ¡Hasta luego!")
+#            df = pd.DataFrame([vectorRespuestas])
+#            df.to_csv("respuestas_encuesta.csv", index=False)
+#            break
+#        respuesta = chatbot(usuario_input,contadorPreguntas)
+#        print(f"Chatbot: {respuesta}")
+#        contadorPreguntas += 1
 
